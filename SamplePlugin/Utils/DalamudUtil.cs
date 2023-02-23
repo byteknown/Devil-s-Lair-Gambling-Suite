@@ -1,15 +1,23 @@
+using Dalamud.Game;
 using Dalamud.Game.ClientState.Party;
+using Dalamud.Game.Gui;
 using System.Collections.Generic;
 
 namespace SamplePlugin.Utils;
 
 public class DalamudUtils
 {
-    private PartyList partyList;
+    private readonly PartyList partyList;
+    private readonly ChatGui chatGui;
 
-    public DalamudUtils(PartyList partyList)
+    private readonly SendMessageHelper sendMessageHelper;
+
+    public DalamudUtils(PartyList partyList, ChatGui chatGui, SigScanner sigScanner)
     {
         this.partyList = partyList;
+        this.chatGui = chatGui;
+
+        sendMessageHelper = new(sigScanner);
     }
 
     public bool IsGrouped()
@@ -34,5 +42,10 @@ public class DalamudUtils
             names.Add(p.Name.TextValue);
         }
         return names.ToArray();
+    }
+
+    public void SendChatMessage(string message)
+    {
+        sendMessageHelper.SendMessage(message);
     }
 }

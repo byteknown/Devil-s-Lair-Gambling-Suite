@@ -1,5 +1,7 @@
+using Dalamud.Game;
 using Dalamud.Game.ClientState.Party;
 using Dalamud.Game.Command;
+using Dalamud.Game.Gui;
 using Dalamud.Interface.Windowing;
 using Dalamud.IoC;
 using Dalamud.Plugin;
@@ -23,12 +25,14 @@ namespace SamplePlugin
         public Plugin(
             [RequiredVersion("1.0")] DalamudPluginInterface pluginInterface,
             [RequiredVersion("1.0")] CommandManager commandManager,
-            [RequiredVersion("1.0")] PartyList partyList)
+            [RequiredVersion("1.0")] PartyList partyList,
+            [RequiredVersion("1.0")] ChatGui chatGui,
+            [RequiredVersion("1.0")] SigScanner sigScanner)
         {
             PluginInterface = pluginInterface;
             CommandManager = commandManager;
 
-            dutils = new DalamudUtils(partyList);
+            dutils = new DalamudUtils(partyList, chatGui, sigScanner);
             MainWindow = new MainWindow(dutils);
             WindowSystem.AddWindow(MainWindow);
 
