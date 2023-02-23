@@ -1,23 +1,30 @@
 using Dalamud.Game;
 using Dalamud.Game.ClientState.Party;
 using Dalamud.Game.Gui;
+using Dalamud.Game.Text;
+using Dalamud.Game.Text.SeStringHandling;
+using Dalamud.Logging;
 using System.Collections.Generic;
+using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 
 namespace SamplePlugin.Utils;
 
 public class DalamudUtils
 {
     private readonly PartyList partyList;
-    private readonly ChatGui chatGui;
 
     private readonly SendMessageHelper sendMessageHelper;
+    private bool randomNumberWaiting = false;
+    private int lastRandomNumber = 0;
 
     public DalamudUtils(PartyList partyList, ChatGui chatGui, SigScanner sigScanner)
     {
         this.partyList = partyList;
-        this.chatGui = chatGui;
 
         sendMessageHelper = new(sigScanner);
+
+        chatGui.ChatMessage += OnChatMessage;
     }
 
     public bool IsGrouped()
@@ -47,5 +54,40 @@ public class DalamudUtils
     public void SendChatMessage(string message)
     {
         sendMessageHelper.SendMessage(message);
+    }
+
+    public async Task<int> IngameRandom()
+    {
+        randomNumberWaiting = true;
+        SendChatMessage("/random");
+
+        int tries = 1;
+        while (true)
+        {
+            if (!randomNumberWaiting)
+            {
+                return lastRandomNumber;
+            }
+
+            tries++;
+            if (tries > 10)
+            {
+                PluginLog.Debug("[IngameRandom] Timeout reached, couldn't find message.");
+                break;
+            }
+
+            await Task.Delay(200);
+        }
+
+        return -1;
+    }
+
+    private void OnChatMessage(XivChatType type, uint senderId, ref SeString sender, ref SeString message, ref bool isHandled)
+    {
+        if (randomNumberWaiting && type == (XivChatType)2122 && message.TextValue.Contains("You roll a "))
+        {
+            lastRandomNumber = int.Parse(Regex.Match(message.TextValue, @"\d+").Value);
+            randomNumberWaiting = false;
+        }
     }
 }

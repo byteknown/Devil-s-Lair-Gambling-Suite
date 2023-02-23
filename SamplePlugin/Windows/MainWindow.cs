@@ -3,6 +3,7 @@ using ImGuiNET;
 using SamplePlugin.Utils;
 using System;
 using System.Numerics;
+
 namespace SamplePlugin.Windows;
 
 public class MainWindow : Window, IDisposable
@@ -11,6 +12,8 @@ public class MainWindow : Window, IDisposable
 
     private int player1Bet = 100;
     private int player2Bet = 0;
+
+    private int lastRoll = 0;
 
     public MainWindow(DalamudUtils dutils) : base("Baccarat by Moonhell", ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse)
     {
@@ -48,6 +51,13 @@ public class MainWindow : Window, IDisposable
 
     public override void Draw()
     {
+        if (ImGui.Button("Random"))
+        {
+            _ = dutils.IngameRandom().ContinueWith(t => lastRoll = t.Result);
+        }
+
+        ImGui.Text("Result = " + lastRoll);
+
         bool activated = false;
         float width = 2.0f;
         /* int switchTabs = 3;
