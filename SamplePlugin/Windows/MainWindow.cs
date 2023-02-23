@@ -52,6 +52,11 @@ public class MainWindow : Window, IDisposable
 
     public override void Draw()
     {
+        if (ImGui.Button("Random"))
+        {
+            _ = dutils.IngameRandom().ContinueWith(t => lastRoll = t.Result);
+        }
+        ImGui.Text("Result = " + lastRoll);
 
         string host = "Moonhell";
         string totalBet = "members " + dutils.GetGroupMembersCount();
