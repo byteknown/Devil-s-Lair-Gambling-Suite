@@ -1,13 +1,14 @@
 {
-  "Author": "your name here",
-  "Name": "Sample Plugin",
-  "Punchline": "A short one-liner that shows up in /xlplugins.",
-  "Description": "A description that shows up in /xlplugins. List any major slash-command(s).",
-  "InternalName": "samplePlugin",
+  "Author": "Moonhell Apocalipse & Klyhia Moni",
+  "Name": "Devil's Lair Gambling Suite",
+  "Punchline": "Full gambling suite for RP venues.",
+  "Description": "Full gambling suite for RP venues, made for the Devil's Lair (Chaos, Cerberus LB W7 P33).\n'/dlgs' to open the main window.",
+  "InternalName": "DLGS",
   "ApplicableVersion": "any",
   "Tags": [
-    "sample",
-    "plugin",
-    "goats"
+    "gambling",
+    "roleplay",
+    "nighclub",
+    "dlgs"
   ]
 }

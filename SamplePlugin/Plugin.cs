@@ -5,63 +5,62 @@ using Dalamud.Game.Gui;
 using Dalamud.Interface.Windowing;
 using Dalamud.IoC;
 using Dalamud.Plugin;
-using SamplePlugin.Utils;
-using SamplePlugin.Windows;
+using DLGS.Utils;
+using DLGS.Windows;
 
-namespace SamplePlugin
+namespace DLGS;
+
+public sealed class Plugin : IDalamudPlugin
 {
-    public sealed class Plugin : IDalamudPlugin
+    public string Name => "Devil's Lair Gambling Suite";
+    private const string CommandName = "/dlgs";
+
+    private DalamudPluginInterface PluginInterface { get; init; }
+    private CommandManager CommandManager { get; init; }
+    public WindowSystem WindowSystem = new("Devil's Lair Gambling Suite");
+
+    private DalamudUtils dutils { get; init; }
+    private MainWindow MainWindow { get; init; }
+
+    public Plugin(
+        [RequiredVersion("1.0")] DalamudPluginInterface pluginInterface,
+        [RequiredVersion("1.0")] CommandManager commandManager,
+        [RequiredVersion("1.0")] PartyList partyList,
+        [RequiredVersion("1.0")] ChatGui chatGui,
+        [RequiredVersion("1.0")] SigScanner sigScanner)
     {
-        public string Name => "Sample Plugin";
-        private const string CommandName = "/pmycommand";
+        PluginInterface = pluginInterface;
+        CommandManager = commandManager;
 
-        private DalamudPluginInterface PluginInterface { get; init; }
-        private CommandManager CommandManager { get; init; }
-        public WindowSystem WindowSystem = new("SamplePlugin");
+        dutils = new DalamudUtils(partyList, chatGui, sigScanner);
+        MainWindow = new MainWindow(dutils);
+        WindowSystem.AddWindow(MainWindow);
 
-        private DalamudUtils dutils { get; init; }
-        private MainWindow MainWindow { get; init; }
-
-        public Plugin(
-            [RequiredVersion("1.0")] DalamudPluginInterface pluginInterface,
-            [RequiredVersion("1.0")] CommandManager commandManager,
-            [RequiredVersion("1.0")] PartyList partyList,
-            [RequiredVersion("1.0")] ChatGui chatGui,
-            [RequiredVersion("1.0")] SigScanner sigScanner)
+        CommandManager.AddHandler(CommandName, new CommandInfo(OnCommand)
         {
-            PluginInterface = pluginInterface;
-            CommandManager = commandManager;
+            HelpMessage = "Opens the DLGS main window."
+        });
 
-            dutils = new DalamudUtils(partyList, chatGui, sigScanner);
-            MainWindow = new MainWindow(dutils);
-            WindowSystem.AddWindow(MainWindow);
+        PluginInterface.UiBuilder.Draw += DrawUI;
+    }
 
-            CommandManager.AddHandler(CommandName, new CommandInfo(OnCommand)
-            {
-                HelpMessage = "A useful message to display in /xlhelp"
-            });
+    public void Dispose()
+    {
+        WindowSystem.RemoveAllWindows();
 
-            PluginInterface.UiBuilder.Draw += DrawUI;
-        }
+        MainWindow.Dispose();
 
-        public void Dispose()
-        {
-            WindowSystem.RemoveAllWindows();
+        CommandManager.RemoveHandler(CommandName);
+    }
 
-            MainWindow.Dispose();
+    private void OnCommand(string command, string args)
+    {
+        // in response to the slash command, just display our main ui
+        MainWindow.IsOpen = true;
+    }
 
-            CommandManager.RemoveHandler(CommandName);
-        }
-
-        private void OnCommand(string command, string args)
-        {
-            // in response to the slash command, just display our main ui
-            MainWindow.IsOpen = true;
-        }
-
-        private void DrawUI()
-        {
-            WindowSystem.Draw();
-        }
+    private void DrawUI()
+    {
+        WindowSystem.Draw();
     }
 }

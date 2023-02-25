@@ -1,22 +1,24 @@
 using Dalamud.Interface.Windowing;
 using ImGuiNET;
-using SamplePlugin.Utils;
+using DLGS.Utils;
 using System;
 using System.Numerics;
 
-namespace SamplePlugin.Windows;
+namespace DLGS.Windows;
 
 public class MainWindow : Window, IDisposable
 {
     private readonly DalamudUtils dutils;
 
-    private int player1Bet = 100;
-    bool activated = false;
-    float width = 2.0f;
+    // Baccarat
+    private int baccaratPlayer1Bet = 100;
+    private bool baccaratEnabled = false;
 
-    private int lastRoll = 0;
+    // Death Roll
+    private int deathRollHostLastRoll = 0;
+    private int deathRollPlayerLastRoll = 0;
 
-    public MainWindow(DalamudUtils dutils) : base("Baccarat by Moonhell", ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse)
+    public MainWindow(DalamudUtils dutils) : base("Devil's Lair Gambling Suite", ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse)
     {
         SizeConstraints = new WindowSizeConstraints
         {
@@ -32,47 +34,22 @@ public class MainWindow : Window, IDisposable
         GC.SuppressFinalize(this);
     }
 
-    public void GeneratePlayers(string playerName)
+    private void BaccaratTab()
     {
-        ImGui.Text(playerName);
-    }
-
-    public void BetsPlacement(string bets)
-    {
-        ImGui.InputInt("", ref player1Bet, 0);
-    }
-
-    public void CardsButton()
-    {
-        if (ImGui.Button("1"))
-        {
-            // Do something when pressed -> Hit a card
-        }
-    }
-
-    public override void Draw()
-    {
-        if (ImGui.Button("Random"))
-        {
-            _ = dutils.IngameRandom().ContinueWith(t => lastRoll = t.Result);
-        }
-        ImGui.Text("Result = " + lastRoll);
-
-        string host = "Moonhell";
-        string totalBet = "members " + dutils.GetGroupMembersCount();
-        ImGui.Text($"This is your main window. You won't need any more window if you plan on using tabs.");
-        if (ImGui.Checkbox("Enable", ref activated))
-        {
-             
-        }
-        ImGui.BeginTabBar("MyTabBar");
-
         if (ImGui.BeginTabItem("Game"))
         {
+            string host = "Moonhell";
+            string totalBet = "members " + dutils.GetGroupMembersCount();
+
+            if (ImGui.Checkbox("Enable", ref baccaratEnabled))
+            {
+
+            }
+
             ImGui.BeginTable("Table1", 3);
-            ImGui.TableSetupColumn("Player", 0, width = 2.0f);
-            ImGui.TableSetupColumn("Bets", 0, width = 1.0f);
-            ImGui.TableSetupColumn("Cards", 0, width = 1.0f);
+            ImGui.TableSetupColumn("Player", 0, 2.0f);
+            ImGui.TableSetupColumn("Bets", 0, 1.0f);
+            ImGui.TableSetupColumn("Cards", 0, 1.0f);
             ImGui.TableNextColumn();
             ImGui.Text(host);
             ImGui.TableNextColumn();
@@ -90,36 +67,71 @@ public class MainWindow : Window, IDisposable
                     ImGui.Text("Player : " + name);
                 }
                 ImGui.TableNextColumn();
-                BetsPlacement("player " + player1Bet);
-                ImGui.TableNextColumn();
-                CardsButton();
+
+                ImGui.InputInt("", ref baccaratPlayer1Bet, 0);
+
                 ImGui.TableNextColumn();
 
+                if (ImGui.Button("1"))
+                {
+                    // Do something when pressed -> Hit a card
+                }
+
+                ImGui.TableNextColumn();
             }
 
             ImGui.EndTable();
 
             ImGui.EndTabItem();
         }
+    }
 
+    private void DeathRollTab()
+    {
+        if (ImGui.BeginTabItem("DeathRoll"))
+        {
+            if (ImGui.Button("Random"))
+            {
+                _ = dutils.IngameRandom().ContinueWith(t => deathRollHostLastRoll = t.Result);
+            }
+            ImGui.Text("Result = " + deathRollHostLastRoll);
+
+            ImGui.EndTabItem();
+        }
+    }
+
+    private void ConfigTab()
+    {
         if (ImGui.BeginTabItem("Config"))
         {
-            // Add your content for Tab 2 here
-            ImGui.Text("This is Tab 2");
+            ImGui.Text("This is the Config tab");
 
             ImGui.EndTabItem();
         }
+    }
+
+    private void HelpTab()
+    {
         if (ImGui.BeginTabItem("Help"))
         {
-            // Add your content for Tab 2 here
-            ImGui.Text("This is Tab 2");
+            ImGui.Text("This is the Help tab");
 
             ImGui.EndTabItem();
         }
+    }
+
+    public override void Draw()
+    {
+        ImGui.Text("Welcome to the Devil's Lair Gambling Suite.");
+        ImGui.Spacing();
+
+        ImGui.BeginTabBar("MainTabBar");
+
+        BaccaratTab();
+        DeathRollTab();
+        ConfigTab();
+        HelpTab();
 
         ImGui.EndTabBar();
-        
-        
-        
     }
 }

@@ -7,7 +7,7 @@ using System.Runtime.InteropServices;
 using System.Text;
 using Framework = FFXIVClientStructs.FFXIV.Client.System.Framework.Framework;
 
-namespace SamplePlugin.Utils;
+namespace DLGS.Utils;
 
 public class SendMessageHelper
 {

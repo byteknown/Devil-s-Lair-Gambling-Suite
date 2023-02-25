@@ -8,7 +8,7 @@ using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
-namespace SamplePlugin.Utils;
+namespace DLGS.Utils;
 
 public class DalamudUtils
 {
