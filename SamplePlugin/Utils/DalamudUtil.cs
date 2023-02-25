@@ -56,10 +56,18 @@ public class DalamudUtils
         sendMessageHelper.SendMessage(message);
     }
 
-    public async Task<int> IngameRandom()
+    public async Task<int> IngameRandom(int maxValue = 0)
     {
         randomNumberWaiting = true;
-        SendChatMessage("/random");
+
+        if (maxValue != 0)
+        {
+            SendChatMessage("/random " + maxValue);
+        }
+        else
+        {
+            SendChatMessage("/random");
+        }
 
         int tries = 1;
         while (true)
