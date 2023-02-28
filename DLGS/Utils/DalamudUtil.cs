@@ -111,15 +111,9 @@ public class DalamudUtils
         }
     }
 
-    public async Task<int> GetTargetRandom()
+    public async Task<int> GetTargetRandom(string player)
     {
-        if (!IsTargetingPlayer())
-        {
-            PluginLog.Warning("[GetTargetRandom] Tried to get random of non player target or no target.");
-            return -2; // No target or non player
-        }
-
-        playerName = GetTargetName();
+        playerName = player;
         randomWaitingPlayer = true;
 
         int tries = 1;
@@ -131,7 +125,7 @@ public class DalamudUtils
             }
 
             tries++;
-            if (tries > 150) // 30 seconds
+            if (tries > 150) // 30 seconds TODO add to config tab
             {
                 PluginLog.Debug("[GetTargetRandom] Timeout reached, couldn't find message.");
                 break;
