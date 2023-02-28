@@ -1,4 +1,5 @@
 using Dalamud.Game;
+using Dalamud.Game.ClientState.Objects;
 using Dalamud.Game.ClientState.Party;
 using Dalamud.Game.Gui;
 using Dalamud.Game.Text;
@@ -13,18 +14,29 @@ namespace DLGS.Utils;
 public class DalamudUtils
 {
     private readonly PartyList partyList;
+    private readonly TargetManager targetManager;
 
     private readonly SendMessageHelper sendMessageHelper;
-    private bool randomNumberWaiting = false;
-    private int lastRandomNumber = 0;
+    private bool randomWaitingHost = false;
+    private int lastRandomHost = 0;
+    private bool randomWaitingPlayer = false;
+    private int lastRandomPlayer = 0;
+    private string playerName = "";
 
-    public DalamudUtils(PartyList partyList, ChatGui chatGui, SigScanner sigScanner)
+    public DalamudUtils(PartyList partyList, ChatGui chatGui, SigScanner sigScanner, TargetManager targetManager)
     {
         this.partyList = partyList;
+        this.targetManager = targetManager;
 
         sendMessageHelper = new(sigScanner);
 
         chatGui.ChatMessage += OnChatMessage;
+    }
+
+    private void OnChatMessage(XivChatType type, uint senderId, ref SeString sender, ref SeString message, ref bool isHandled)
+    {
+        PlayerRandomEvent(type, ref message);
+        TargetRandomEvent(type, ref message);
     }
 
     public bool IsGrouped()
@@ -58,7 +70,7 @@ public class DalamudUtils
 
     public async Task<int> IngameRandom(int maxValue = 0)
     {
-        randomNumberWaiting = true;
+        randomWaitingHost = true;
 
         if (maxValue != 0)
         {
@@ -72,9 +84,9 @@ public class DalamudUtils
         int tries = 1;
         while (true)
         {
-            if (!randomNumberWaiting)
+            if (!randomWaitingHost)
             {
-                return lastRandomNumber;
+                return lastRandomHost;
             }
 
             tries++;
@@ -90,12 +102,82 @@ public class DalamudUtils
         return -1;
     }
 
-    private void OnChatMessage(XivChatType type, uint senderId, ref SeString sender, ref SeString message, ref bool isHandled)
+    private void PlayerRandomEvent(XivChatType type, ref SeString message)
     {
-        if (randomNumberWaiting && type == (XivChatType)2122 && message.TextValue.Contains("You roll a "))
+        if (randomWaitingHost && message.TextValue.Contains("You roll a "))
         {
-            lastRandomNumber = int.Parse(Regex.Match(message.TextValue, @"\d+").Value);
-            randomNumberWaiting = false;
+            lastRandomHost = int.Parse(Regex.Match(message.TextValue, @"\d+").Value);
+            randomWaitingHost = false;
         }
+    }
+
+    public async Task<int> GetTargetRandom()
+    {
+        if (!IsTargetingPlayer())
+        {
+            PluginLog.Warning("[GetTargetRandom] Tried to get random of non player target or no target.");
+            return -2; // No target or non player
+        }
+
+        playerName = GetTargetName();
+        randomWaitingPlayer = true;
+
+        int tries = 1;
+        while (true)
+        {
+            if (!randomWaitingPlayer)
+            {
+                return lastRandomPlayer;
+            }
+
+            tries++;
+            if (tries > 150) // 30 seconds
+            {
+                PluginLog.Debug("[GetTargetRandom] Timeout reached, couldn't find message.");
+                break;
+            }
+
+            await Task.Delay(200);
+        }
+
+        return -1; // Timeout
+    }
+
+    private void TargetRandomEvent(XivChatType type, ref SeString message)
+    {
+        if (randomWaitingPlayer && message.TextValue.Contains(playerName))
+        {
+            Match match = Regex.Match(message.TextValue, "Random! [a-zA-Z ']+ rolls a (\\d{1,3})\\.");
+
+            if (match.Success)
+            {
+                lastRandomPlayer = int.Parse(match.Groups[1].Value);
+                randomWaitingPlayer = false;
+            }
+        }
+    }
+
+    public bool IsTargetingPlayer()
+    {
+        if (targetManager.Target == null)
+        {
+            return false;
+        }
+
+        if (targetManager.Target.ObjectKind == Dalamud.Game.ClientState.Objects.Enums.ObjectKind.Player)
+        {
+            return true;
+        }
+        return false;
+    }
+
+    public string GetTargetName()
+    {
+        if (targetManager.Target == null)
+        {
+            return "No target";
+        }
+
+        return targetManager.Target.Name.ToString();
     }
 }
