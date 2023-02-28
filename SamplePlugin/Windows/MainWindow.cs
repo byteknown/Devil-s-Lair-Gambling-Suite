@@ -1,6 +1,7 @@
 using Dalamud.Interface.Windowing;
-using ImGuiNET;
+using DLGS.Games;
 using DLGS.Utils;
+using ImGuiNET;
 using System;
 using System.Numerics;
 
@@ -8,15 +9,8 @@ namespace DLGS.Windows;
 
 public class MainWindow : Window, IDisposable
 {
-    private readonly DalamudUtils dutils;
-
-    // Baccarat
-    private int baccaratPlayer1Bet = 100;
-    private bool baccaratEnabled = false;
-
-    // Death Roll
-    private int deathRollHostLastRoll = 0;
-    private int deathRollPlayerLastRoll = 0;
+    private readonly Baccarat baccarat;
+    private readonly DeathRoll deathRoll;
 
     public MainWindow(DalamudUtils dutils) : base("Devil's Lair Gambling Suite", ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse)
     {
@@ -26,7 +20,8 @@ public class MainWindow : Window, IDisposable
             MaximumSize = new Vector2(float.MaxValue, float.MaxValue)
         };
 
-        this.dutils = dutils;
+        deathRoll = new(dutils);
+        baccarat = new(dutils);
     }
 
     public void Dispose()
@@ -34,70 +29,19 @@ public class MainWindow : Window, IDisposable
         GC.SuppressFinalize(this);
     }
 
-    private void BaccaratTab()
+    public override void Draw()
     {
-        if (ImGui.BeginTabItem("Game"))
-        {
-            string host = "Moonhell";
-            string totalBet = "members " + dutils.GetGroupMembersCount();
+        ImGui.Text("Welcome to the Devil's Lair Gambling Suite.");
+        ImGui.Spacing();
 
-            if (ImGui.Checkbox("Enable", ref baccaratEnabled))
-            {
+        ImGui.BeginTabBar("MainTabBar");
 
-            }
+        baccarat.BaccaratTab();
+        deathRoll.DeathRollTab();
+        ConfigTab();
+        HelpTab();
 
-            ImGui.BeginTable("Table1", 3);
-            ImGui.TableSetupColumn("Player", 0, 2.0f);
-            ImGui.TableSetupColumn("Bets", 0, 1.0f);
-            ImGui.TableSetupColumn("Cards", 0, 1.0f);
-            ImGui.TableNextColumn();
-            ImGui.Text(host);
-            ImGui.TableNextColumn();
-            ImGui.Text(totalBet);
-            ImGui.TableNextColumn();
-            if (ImGui.Button("This is a button"))
-            {
-                // Do something when pressed
-            }
-            ImGui.TableNextColumn();
-            for (int i = 1; i <= 8; i++)
-            {
-                foreach (string name in dutils.GetGroupMembersNames())
-                {
-                    ImGui.Text("Player : " + name);
-                }
-                ImGui.TableNextColumn();
-
-                ImGui.InputInt("", ref baccaratPlayer1Bet, 0);
-
-                ImGui.TableNextColumn();
-
-                if (ImGui.Button("1"))
-                {
-                    // Do something when pressed -> Hit a card
-                }
-
-                ImGui.TableNextColumn();
-            }
-
-            ImGui.EndTable();
-
-            ImGui.EndTabItem();
-        }
-    }
-
-    private void DeathRollTab()
-    {
-        if (ImGui.BeginTabItem("DeathRoll"))
-        {
-            if (ImGui.Button("Random"))
-            {
-                _ = dutils.IngameRandom().ContinueWith(t => deathRollHostLastRoll = t.Result);
-            }
-            ImGui.Text("Result = " + deathRollHostLastRoll);
-
-            ImGui.EndTabItem();
-        }
+        ImGui.EndTabBar();
     }
 
     private void ConfigTab()
@@ -118,20 +62,5 @@ public class MainWindow : Window, IDisposable
 
             ImGui.EndTabItem();
         }
-    }
-
-    public override void Draw()
-    {
-        ImGui.Text("Welcome to the Devil's Lair Gambling Suite.");
-        ImGui.Spacing();
-
-        ImGui.BeginTabBar("MainTabBar");
-
-        BaccaratTab();
-        DeathRollTab();
-        ConfigTab();
-        HelpTab();
-
-        ImGui.EndTabBar();
     }
 }
